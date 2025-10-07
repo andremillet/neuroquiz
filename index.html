@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Neurologia Clínica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .correct {
+            background-color: #166534 !important; /* green-700 */
+            border-color: #22c55e !important; /* green-500 */
+            color: white !important;
+        }
+        .incorrect {
+            background-color: #991b1b !important; /* red-800 */
+            border-color: #ef4444 !important; /* red-500 */
+            color: white !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl bg-gray-800 rounded-lg shadow-xl p-6 md:p-8">
+
+        <!-- Tela 1: Configuração do Quiz -->
+        <div id="setup-screen" class="screen active space-y-6">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-white">Quiz de Neurologia</h1>
+                <p class="text-gray-400 mt-2">Personalize seu teste e inicie.</p>
+            </div>
+
+            <div>
+                <label for="jsonFile" class="block mb-2 text-sm font-medium text-gray-300">1. Carregue o arquivo JSON do Quiz</label>
+                <input type="file" id="jsonFile" accept=".json" class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            </div>
+
+            <div id="theme-selection" class="hidden">
+                <label class="block mb-2 text-sm font-medium text-gray-300">2. Escolha os temas</label>
+                <div id="theme-checkboxes" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded-lg">
+                    <!-- Checkboxes serão inseridos aqui -->
+                </div>
+            </div>
+
+            <div id="quantity-per-theme-selection" class="hidden">
+                 <label class="block mb-2 text-sm font-medium text-gray-300">3. Defina o número de questões por tema</label>
+                 <div id="quantity-inputs" class="space-y-4 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded-lg">
+                    <!-- Inputs de quantidade serão inseridos dinamicamente aqui -->
+                 </div>
+            </div>
+
+            <button id="startQuizBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                Iniciar Quiz
+            </button>
+        </div>
+
+        <!-- Tela 2: Quiz -->
+        <div id="quiz-screen" class="screen space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold text-indigo-400" id="quiz-theme">Tema</h2>
+                <div class="text-sm text-gray-400" id="progress-text">Questão 1 de 10</div>
+            </div>
+            <p id="question-text" class="text-lg leading-relaxed"></p>
+            <div id="options-container" class="space-y-3">
+                <!-- Opções serão inseridas aqui -->
+            </div>
+            <div id="feedback-container" class="mt-4 space-y-3 hidden">
+                 <div id="explanation-box" class="bg-gray-900 p-4 rounded-lg hidden">
+                    <h3 class="font-bold text-green-400 mb-2">Explicação</h3>
+                    <p id="explanation-text" class="text-sm text-gray-300"></p>
+                 </div>
+                 <div class="flex space-x-4">
+                    <button id="tryAgainBtn" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg">Tentar Novamente</button>
+                    <button id="showExplanationBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Ver Resposta</button>
+                    <button id="nextQuestionBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg hidden">Próxima Questão</button>
+                 </div>
+            </div>
+        </div>
+
+        <!-- Tela 3: Resultados -->
+        <div id="results-screen" class="screen text-center space-y-6">
+            <h1 class="text-3xl font-bold text-white">Resultados</h1>
+            <div class="bg-gray-900 p-6 rounded-lg space-y-4">
+                <p class="text-lg">Pontuação Final: <span id="final-score" class="font-bold text-2xl text-green-400"></span></p>
+                <div class="flex justify-around">
+                    <div>
+                        <p class="text-gray-400">Corretas (1ª tent.)</p>
+                        <p id="correct-answers" class="text-2xl font-bold text-green-500"></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400">Incorretas (1ª tent.)</p>
+                        <p id="incorrect-answers" class="text-2xl font-bold text-red-500"></p>
+                    </div>
+                </div>
+            </div>
+            <button id="restartQuizBtn" class="w-full md:w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                Reiniciar Quiz
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Estado da aplicação
+        let quizData = {};
+        let quizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let incorrectCount = 0;
+        let isFirstAttempt = true;
+
+        // Telas
+        const screens = document.querySelectorAll('.screen');
+        const setupScreen = document.getElementById('setup-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+
+        // Elementos da UI
+        const jsonFileInput = document.getElementById('jsonFile');
+        const themeSelectionDiv = document.getElementById('theme-selection');
+        const themeCheckboxesDiv = document.getElementById('theme-checkboxes');
+        const quantityPerThemeDiv = document.getElementById('quantity-per-theme-selection');
+        const quantityInputsDiv = document.getElementById('quantity-inputs');
+        const startQuizBtn = document.getElementById('startQuizBtn');
+        
+        const progressText = document.getElementById('progress-text');
+        const questionText = document.getElementById('question-text');
+        const quizThemeText = document.getElementById('quiz-theme');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const explanationBox = document.getElementById('explanation-box');
+        const explanationText = document.getElementById('explanation-text');
+        const tryAgainBtn = document.getElementById('tryAgainBtn');
+        const showExplanationBtn = document.getElementById('showExplanationBtn');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+
+        const finalScoreText = document.getElementById('final-score');
+        const correctAnswersText = document.getElementById('correct-answers');
+        const incorrectAnswersText = document.getElementById('incorrect-answers');
+        const restartQuizBtn = document.getElementById('restartQuizBtn');
+
+        // Funções
+        function switchScreen(screenId) {
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function handleJsonUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    quizData = JSON.parse(e.target.result);
+                    populateThemes();
+                    themeSelectionDiv.classList.remove('hidden');
+                    startQuizBtn.disabled = false;
+                } catch (error) {
+                    alert('Erro ao ler o arquivo JSON. Verifique o formato do arquivo.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function populateThemes() {
+            themeCheckboxesDiv.innerHTML = '';
+            for (const theme in quizData) {
+                const div = document.createElement('div');
+                div.className = 'flex items-center';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `theme-${theme.replace(/\s/g, '-')}`;
+                checkbox.value = theme;
+                checkbox.className = 'w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2';
+                const label = document.createElement('label');
+                label.htmlFor = `theme-${theme.replace(/\s/g, '-')}`;
+                label.textContent = theme;
+                label.className = 'ml-2 text-sm font-medium text-gray-300';
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                themeCheckboxesDiv.appendChild(div);
+            }
+        }
+
+        function updateQuantityInputs() {
+            const selectedThemes = [...themeCheckboxesDiv.querySelectorAll('input:checked')].map(cb => cb.value);
+            quantityInputsDiv.innerHTML = '';
+
+            if (selectedThemes.length > 0) {
+                quantityPerThemeDiv.classList.remove('hidden');
+                selectedThemes.forEach(theme => {
+                    const maxQuestions = quizData[theme].length;
+                    const inputContainer = document.createElement('div');
+                    inputContainer.className = 'p-2 rounded-md bg-gray-800 border border-gray-700';
+                    inputContainer.dataset.theme = theme;
+                    
+                    inputContainer.innerHTML = `
+                        <p class="font-semibold text-indigo-400 text-sm mb-2">${theme} (${maxQuestions} disponíveis)</p>
+                        <div class="flex items-center space-x-3">
+                            <input type="number" value="10" min="1" max="${maxQuestions}" class="num-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="all-${theme.replace(/\s/g, '-')}" class="all-checkbox w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2">
+                                <label for="all-${theme.replace(/\s/g, '-')}" class="ml-2 text-sm font-medium text-gray-300">Todas</label>
+                            </div>
+                        </div>
+                    `;
+                    quantityInputsDiv.appendChild(inputContainer);
+                });
+
+                // Adicionar event listeners para os checkboxes "Todas"
+                quantityInputsDiv.querySelectorAll('.all-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => {
+                        const numInput = e.target.closest('.flex').previousElementSibling;
+                        numInput.disabled = e.target.checked;
+                    });
+                });
+
+            } else {
+                quantityPerThemeDiv.classList.add('hidden');
+            }
+        }
+
+
+        function startQuiz() {
+            quizQuestions = [];
+            const quantityDivs = quantityInputsDiv.querySelectorAll('div[data-theme]');
+            
+            quantityDivs.forEach(div => {
+                const theme = div.dataset.theme;
+                const numInput = div.querySelector('.num-input');
+                const allCheckbox = div.querySelector('.all-checkbox');
+                
+                const availableQuestions = [...quizData[theme]]; // Criar cópia
+                const maxQuestions = availableQuestions.length;
+                
+                let numToTake = 0;
+                if (allCheckbox.checked) {
+                    numToTake = maxQuestions;
+                } else {
+                    const requested = parseInt(numInput.value);
+                    numToTake = Math.min(requested, maxQuestions);
+                }
+
+                // Embaralhar e pegar o número de questões
+                const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
+                quizQuestions.push(...shuffled.slice(0, numToTake).map(q => ({...q, theme})));
+            });
+
+            if (quizQuestions.length === 0) {
+                alert('Por favor, defina um número de questões para pelo menos um tema.');
+                return;
+            }
+
+            // Embaralhar a ordem final das questões
+             quizQuestions.sort(() => 0.5 - Math.random());
+            
+            // Resetar estado do quiz
+            currentQuestionIndex = 0;
+            score = 0;
+            incorrectCount = 0;
+
+            displayQuestion();
+            switchScreen('quiz-screen');
+        }
+        
+        function displayQuestion() {
+            isFirstAttempt = true;
+            feedbackContainer.classList.add('hidden');
+            explanationBox.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            tryAgainBtn.classList.add('hidden');
+            showExplanationBtn.classList.add('hidden');
+
+            const question = quizQuestions[currentQuestionIndex];
+            progressText.textContent = `Questão ${currentQuestionIndex + 1} de ${quizQuestions.length}`;
+            quizThemeText.textContent = question.theme;
+            questionText.textContent = question.pergunta;
+
+            optionsContainer.innerHTML = '';
+            
+            const options = Object.entries(question.opcoes);
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+
+            options.forEach(([key, value]) => {
+                const button = document.createElement('button');
+                button.textContent = `${key.toUpperCase()}. ${value}`;
+                button.dataset.option = key;
+                button.className = 'option-btn block w-full text-left p-3 bg-gray-700 hover:bg-gray-600 border border-transparent rounded-lg';
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function handleAnswer(e) {
+            if (!e.target.matches('.option-btn')) return;
+
+            const selectedOption = e.target.dataset.option;
+            const question = quizQuestions[currentQuestionIndex];
+            const correctOption = question.resposta_correta;
+
+            const optionButtons = optionsContainer.querySelectorAll('.option-btn');
+            optionButtons.forEach(btn => btn.disabled = true);
+            
+            if (selectedOption === correctOption) {
+                e.target.classList.add('correct');
+                if (isFirstAttempt) {
+                    score++;
+                }
+                feedbackContainer.classList.remove('hidden');
+                nextQuestionBtn.classList.remove('hidden');
+            } else {
+                e.target.classList.add('incorrect');
+                const correctButton = optionsContainer.querySelector(`[data-option="${correctOption}"]`);
+                if (correctButton) correctButton.classList.add('correct');
+                if (isFirstAttempt) {
+                    incorrectCount++;
+                }
+                isFirstAttempt = false;
+                feedbackContainer.classList.remove('hidden');
+                tryAgainBtn.classList.remove('hidden');
+                showExplanationBtn.classList.remove('hidden');
+            }
+        }
+
+        function tryAgain() {
+             const optionButtons = optionsContainer.querySelectorAll('.option-btn');
+            optionButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('correct', 'incorrect');
+            });
+             feedbackContainer.classList.add('hidden');
+
+            // Re-embaralhar apenas as opções
+            const question = quizQuestions[currentQuestionIndex];
+            const options = Object.entries(question.opcoes);
+            for (let i = options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [options[i], options[j]] = [options[j], options[i]];
+            }
+            optionsContainer.innerHTML = '';
+            options.forEach(([key, value]) => {
+                const button = document.createElement('button');
+                button.textContent = `${key.toUpperCase()}. ${value}`;
+                button.dataset.option = key;
+                button.className = 'option-btn block w-full text-left p-3 bg-gray-700 hover:bg-gray-600 border border-transparent rounded-lg';
+                optionsContainer.appendChild(button);
+            });
+        }
+        
+        function showExplanation() {
+            const explanation = quizQuestions[currentQuestionIndex].explicacao;
+            if (explanation && explanation.trim() !== 'Explicação não encontrada.' && explanation.trim() !== '') {
+                 explanationText.textContent = explanation;
+            } else {
+                 explanationText.textContent = 'Desculpe, a explicação para esta questão não foi encontrada no arquivo JSON.';
+            }
+
+            explanationBox.classList.remove('hidden');
+            tryAgainBtn.classList.add('hidden');
+            showExplanationBtn.classList.add('hidden');
+            nextQuestionBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizQuestions.length) {
+                displayQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            const totalQuestions = quizQuestions.length;
+            finalScoreText.textContent = `${Math.round((score / totalQuestions) * 100)}%`;
+            correctAnswersText.textContent = score;
+            incorrectAnswersText.textContent = incorrectCount;
+            switchScreen('results-screen');
+        }
+        
+        function restartQuiz() {
+            jsonFileInput.value = '';
+            themeSelectionDiv.classList.add('hidden');
+            quantityPerThemeDiv.classList.add('hidden');
+            startQuizBtn.disabled = true;
+            quizData = {};
+            switchScreen('setup-screen');
+        }
+
+        // Adicionar Event Listeners
+        jsonFileInput.addEventListener('change', handleJsonUpload);
+        themeCheckboxesDiv.addEventListener('change', updateQuantityInputs);
+        startQuizBtn.addEventListener('click', startQuiz);
+        optionsContainer.addEventListener('click', handleAnswer);
+        tryAgainBtn.addEventListener('click', tryAgain);
+        showExplanationBtn.addEventListener('click', showExplanation);
+        nextQuestionBtn.addEventListener('click', nextQuestion);
+        restartQuizBtn.addEventListener('click', restartQuiz);
+
+    </script>
+</body>
+</html>
+
