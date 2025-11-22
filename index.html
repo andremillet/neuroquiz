@@ -159,7 +159,31 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 try {
-                    quizData = JSON.parse(e.target.result);
+                    const rawData = JSON.parse(e.target.result);
+                    
+                    // Adaptar estrutura do novo JSON para o formato esperado pelo app
+                    // Novo formato: { categorias: [ { nome: "Tema", questoes: [ ... ] } ] }
+                    // Formato interno: { "Tema": [ ... ] }
+                    
+                    if (rawData.categorias && Array.isArray(rawData.categorias)) {
+                        quizData = {};
+                        rawData.categorias.forEach(cat => {
+                            // Mapear campos
+                            const mappedQuestions = cat.questoes.map(q => ({
+                                pergunta: q.enunciado,
+                                opcoes: q.alternativas,
+                                resposta_correta: q.gabarito,
+                                explicacao: q.comentario,
+                                id: q.id,
+                                tema: cat.nome
+                            }));
+                            quizData[cat.nome] = mappedQuestions;
+                        });
+                    } else {
+                        // Fallback para formato antigo ou erro
+                        quizData = rawData;
+                    }
+
                     populateThemes();
                     themeSelectionDiv.classList.remove('hidden');
                     startQuizBtn.disabled = false;
