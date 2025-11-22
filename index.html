@@ -102,240 +102,451 @@
 
             <div id="quantity-per-theme-selection" class="hidden">
                 <label class="block mb-2 text-sm font-medium text-gray-300">3. Defina o número de questões por
-                    tema</label>
-                <div id="quantity-inputs" class="space-y-4 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded-lg">
-                    <!-- Inputs de quantidade serão inseridos dinamicamente aqui -->
-                </div>
-            </div>
+                    <!DOCTYPE html>
+                    <html lang="pt-BR">
 
-            <button id="startQuizBtn"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
-                disabled>
-                Iniciar Quiz
-            </button>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Quiz de Neurologia Clínica</title>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+                            rel="stylesheet">
+                        <style>
+                            body {
+                                font-family: 'Inter', sans-serif;
+                            }
 
-            <div class="text-xs text-gray-500 text-center mt-4">
-                Dica: Use as teclas 1-5 para selecionar e Enter para confirmar.
-            </div>
-        </div>
+                            .screen {
+                                display: none;
+                            }
 
-        <!-- Tela 2: Quiz -->
-        <div id="quiz-screen" class="screen space-y-6">
-            <!-- Progress Bar -->
-            <div id="progress-container">
-                <div id="progress-bar"></div>
-            </div>
+                            .screen.active {
+                                display: block;
+                            }
 
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-indigo-400" id="quiz-theme">Tema</h2>
-                <div class="text-sm text-gray-400" id="progress-text">Questão 1 de 10</div>
-            </div>
-            <p id="question-text" class="text-lg leading-relaxed"></p>
-            <div id="options-container" class="space-y-3">
-                <!-- Opções serão inseridas aqui -->
-            </div>
-            <div id="feedback-container" class="mt-4 space-y-3 hidden">
-                <div id="explanation-box" class="bg-gray-900 p-4 rounded-lg hidden">
-                    <h3 class="font-bold text-green-400 mb-2">Explicação</h3>
-                    <p id="explanation-text" class="text-sm text-gray-300"></p>
-                </div>
-                <div class="flex space-x-4">
-                    <button id="tryAgainBtn"
-                        class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg">Tentar
-                        Novamente</button>
-                    <button id="showExplanationBtn"
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Ver
-                        Resposta</button>
-                    <button id="nextQuestionBtn"
-                        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg hidden">Próxima
-                        Questão (Enter)</button>
-                </div>
-            </div>
-        </div>
+                            .option-btn {
+                                transition: all 0.2s ease-in-out;
+                            }
 
-        <!-- Tela 3: Resultados -->
-        <div id="results-screen" class="screen text-center space-y-6">
-            <h1 class="text-3xl font-bold text-white">Resultados</h1>
-            <div class="bg-gray-900 p-6 rounded-lg space-y-4">
-                <p class="text-lg">Pontuação Final: <span id="final-score"
-                        class="font-bold text-2xl text-green-400"></span></p>
-                <div class="flex justify-around">
-                    <div>
-                        <p class="text-gray-400">Corretas (1ª tent.)</p>
-                        <p id="correct-answers" class="text-2xl font-bold text-green-500"></p>
-                    </div>
-                    <div>
-                        <p class="text-gray-400">Incorretas (1ª tent.)</p>
-                        <p id="incorrect-answers" class="text-2xl font-bold text-red-500"></p>
-                    </div>
-                </div>
-            </div>
+                            .correct {
+                                background-color: #166534 !important;
+                                /* green-700 */
+                                border-color: #22c55e !important;
+                                /* green-500 */
+                                color: white !important;
+                            }
 
-            <div class="flex space-x-4">
-                <button id="reviewErrorsBtn"
-                    class="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-4 rounded-lg hidden">
-                    Revisar Erros
-                </button>
-                <button id="restartQuizBtn"
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
-                    Reiniciar Quiz
-                </button>
-            </div>
+                            .incorrect {
+                                background-color: #991b1b !important;
+                                /* red-800 */
+                                border-color: #ef4444 !important;
+                                /* red-500 */
+                                color: white !important;
+                            }
 
-            <!-- Container de Revisão -->
-            <div id="review-container" class="hidden text-left space-y-4 mt-6 max-h-96 overflow-y-auto pr-2">
-                <!-- Itens de revisão -->
-            </div>
-        </div>
-    </div>
+                            /* Progress Bar */
+                            #progress-container {
+                                width: 100%;
+                                background-color: #374151;
+                                /* gray-700 */
+                                border-radius: 9999px;
+                                height: 0.5rem;
+                                margin-bottom: 1rem;
+                            }
 
-    <script type="module">
-        // Estado da aplicação
-        let quizData = {};
-        let quizQuestions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let incorrectCount = 0;
-        let isFirstAttempt = true;
-        let incorrectQuestionsLog = []; // Armazena detalhes dos erros para revisão
+                            #progress-bar {
+                                background-color: #4f46e5;
+                                /* indigo-600 */
+                                height: 0.5rem;
+                                border-radius: 9999px;
+                                width: 0%;
+                                transition: width 0.3s ease;
+                            }
+                        </style>
+                    </head>
 
-        // Telas
-        const screens = document.querySelectorAll('.screen');
-        const setupScreen = document.getElementById('setup-screen');
-        const quizScreen = document.getElementById('quiz-screen');
-        const resultsScreen = document.getElementById('results-screen');
+                    <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
-        // Elementos da UI
-        const jsonFileInput = document.getElementById('jsonFile');
-        const loadDefaultBtn = document.getElementById('loadDefaultBtn');
-        const fileStatus = document.getElementById('file-status');
-        const themeSelectionDiv = document.getElementById('theme-selection');
-        const themeCheckboxesDiv = document.getElementById('theme-checkboxes');
-        const quantityPerThemeDiv = document.getElementById('quantity-per-theme-selection');
-        const quantityInputsDiv = document.getElementById('quantity-inputs');
-        const startQuizBtn = document.getElementById('startQuizBtn');
+                        <div class="w-full max-w-2xl bg-gray-800 rounded-lg shadow-xl p-6 md:p-8">
 
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
-        const questionText = document.getElementById('question-text');
-        const quizThemeText = document.getElementById('quiz-theme');
-        const optionsContainer = document.getElementById('options-container');
-        const feedbackContainer = document.getElementById('feedback-container');
-        const explanationBox = document.getElementById('explanation-box');
-        const explanationText = document.getElementById('explanation-text');
-        const tryAgainBtn = document.getElementById('tryAgainBtn');
-        const showExplanationBtn = document.getElementById('showExplanationBtn');
-        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+                            <!-- Tela 1: Configuração do Quiz -->
+                            <div id="setup-screen" class="screen active space-y-6">
+                                <div class="text-center">
+                                    <h1 class="text-3xl font-bold text-white">Quiz de Neurologia</h1>
+                                    <p class="text-gray-400 mt-2">Personalize seu teste e inicie.</p>
+                                </div>
 
-        const finalScoreText = document.getElementById('final-score');
-        const correctAnswersText = document.getElementById('correct-answers');
-        const incorrectAnswersText = document.getElementById('incorrect-answers');
-        const restartQuizBtn = document.getElementById('restartQuizBtn');
-        const reviewErrorsBtn = document.getElementById('reviewErrorsBtn');
-        const reviewContainer = document.getElementById('review-container');
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block mb-2 text-sm font-medium text-gray-300">1. Carregue o Banco
+                                            de Questões</label>
+                                        <div class="flex space-x-2">
+                                            <button id="loadDefaultBtn"
+                                                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+                                                Carregar Banco Padrão
+                                            </button>
+                                            <div class="relative flex-1">
+                                                <input type="file" id="jsonFile" accept=".json" class="hidden">
+                                                <label for="jsonFile"
+                                                    class="flex items-center justify-center w-full h-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                                                    Carregar Arquivo
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <p id="file-status" class="text-xs text-gray-400 mt-1 text-center"></p>
+                                    </div>
+                                </div>
 
-        // Funções
-        function switchScreen(screenId) {
-            screens.forEach(screen => screen.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
+                                <div id="theme-selection" class="hidden">
+                                    <label class="block mb-2 text-sm font-medium text-gray-300">2. Escolha os
+                                        temas</label>
+                                    <div id="theme-checkboxes"
+                                        class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded-lg">
+                                        <!-- Checkboxes serão inseridos aqui -->
+                                    </div>
+                                </div>
 
-        function processQuizData(rawData) {
-            if (rawData.categorias && Array.isArray(rawData.categorias)) {
-                quizData = {};
-                rawData.categorias.forEach(cat => {
-                    const mappedQuestions = cat.questoes.map(q => ({
-                        pergunta: q.enunciado,
-                        opcoes: q.alternativas,
-                        resposta_correta: q.gabarito,
-                        explicacao: q.comentario,
-                        id: q.id,
-                        tema: cat.nome
-                    }));
-                    quizData[cat.nome] = mappedQuestions;
-                });
-            } else {
-                quizData = rawData;
-            }
-            populateThemes();
-            themeSelectionDiv.classList.remove('hidden');
-            startQuizBtn.disabled = false;
-        }
+                                <div id="quantity-per-theme-selection" class="hidden">
+                                    <label class="block mb-2 text-sm font-medium text-gray-300">3. Defina o número de
+                                        questões por
+                                        tema</label>
+                                    <div id="quantity-inputs"
+                                        class="space-y-4 max-h-48 overflow-y-auto bg-gray-900 p-3 rounded-lg">
+                                        <!-- Inputs de quantidade serão inseridos dinamicamente aqui -->
+                                    </div>
+                                </div>
 
-        function handleJsonUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="sequentialMode"
+                                            class="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2">
+                                        <label for="sequentialMode" class="ml-2 text-sm font-medium text-gray-300">Modo
+                                            Sequencial (Ordem do Livro)</label>
+                                    </div>
+                                </div>
 
-            fileStatus.textContent = `Arquivo carregado: ${file.name}`;
+                                <button id="startQuizBtn"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:cursor-not-allowed"
+                                    disabled>
+                                    Iniciar Quiz
+                                </button>
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const rawData = JSON.parse(e.target.result);
-                    processQuizData(rawData);
-                } catch (error) {
-                    alert('Erro ao ler o arquivo JSON.');
-                    console.error(error);
-                }
-            };
-            reader.readAsText(file);
-        }
+                                <div class="text-xs text-gray-500 text-center mt-4">
+                                    Dica: Use as teclas 1-5 para selecionar e Enter para confirmar.
+                                </div>
+                            </div>
 
-        async function loadDefaultBank() {
-            try {
-                loadDefaultBtn.textContent = "Carregando...";
-                loadDefaultBtn.disabled = true;
+                            <!-- Tela 2: Quiz -->
+                            <div id="quiz-screen" class="screen space-y-6 relative">
+                                <!-- Progress Bar -->
+                                <div id="progress-container">
+                                    <div id="progress-bar"></div>
+                                </div>
 
-                const response = await fetch('banco_piloto_ten_abn.json');
-                if (!response.ok) throw new Error('Falha ao carregar arquivo padrão');
+                                <!-- Header do Quiz -->
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h2 class="text-xl font-bold text-indigo-400" id="quiz-theme">Tema</h2>
+                                        <div class="text-sm text-gray-400" id="progress-text">Questão 1 de 10</div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button id="openMapBtn"
+                                            class="text-gray-400 hover:text-white p-2 rounded hover:bg-gray-700"
+                                            title="Mapa de Questões">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                                            </svg>
+                                        </button>
+                                        <button id="reportBtn"
+                                            class="text-red-400 hover:text-red-300 p-2 rounded hover:bg-gray-700"
+                                            title="Reportar Erro">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
 
-                const rawData = await response.json();
-                processQuizData(rawData);
+                                <p id="question-text" class="text-lg leading-relaxed"></p>
+                                <div id="options-container" class="space-y-3">
+                                    <!-- Opções serão inseridas aqui -->
+                                </div>
+                                <div id="feedback-container" class="mt-4 space-y-3 hidden">
+                                    <div id="explanation-box" class="bg-gray-900 p-4 rounded-lg hidden">
+                                        <h3 class="font-bold text-green-400 mb-2">Explicação</h3>
+                                        <p id="explanation-text" class="text-sm text-gray-300"></p>
+                                    </div>
+                                    <div class="flex space-x-4">
+                                        <button id="tryAgainBtn"
+                                            class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 px-4 rounded-lg">Tentar
+                                            Novamente</button>
+                                        <button id="showExplanationBtn"
+                                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">Ver
+                                            Resposta</button>
+                                    </div>
+                                </div>
 
-                fileStatus.textContent = "Banco Padrão carregado com sucesso!";
-                fileStatus.classList.add('text-green-400');
-                loadDefaultBtn.textContent = "Banco Carregado";
-            } catch (error) {
-                alert('Erro ao carregar o banco padrão. Certifique-se que o arquivo está na mesma pasta.');
-                console.error(error);
-                loadDefaultBtn.textContent = "Carregar Banco Padrão";
-                loadDefaultBtn.disabled = false;
-            }
-        }
+                                <!-- Navegação Inferior -->
+                                <div class="flex justify-between pt-4 border-t border-gray-700">
+                                    <button id="prevQuestionBtn"
+                                        class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Anterior
+                                    </button>
+                                    <button id="nextQuestionBtn"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg hidden">
+                                        Próxima (Enter)
+                                    </button>
+                                </div>
+                            </div>
 
-        function populateThemes() {
-            themeCheckboxesDiv.innerHTML = '';
-            for (const theme in quizData) {
-                const div = document.createElement('div');
-                div.className = 'flex items-center';
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `theme-${theme.replace(/\s/g, '-')}`;
-                checkbox.value = theme;
-                checkbox.className = 'w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2';
-                const label = document.createElement('label');
-                label.htmlFor = `theme-${theme.replace(/\s/g, '-')}`;
-                label.textContent = theme;
-                label.className = 'ml-2 text-sm font-medium text-gray-300';
-                div.appendChild(checkbox);
-                div.appendChild(label);
-                themeCheckboxesDiv.appendChild(div);
-            }
-        }
+                            <!-- Tela 3: Resultados -->
+                            <div id="results-screen" class="screen text-center space-y-6">
+                                <h1 class="text-3xl font-bold text-white">Resultados</h1>
+                                <div class="bg-gray-900 p-6 rounded-lg space-y-4">
+                                    <p class="text-lg">Pontuação Final: <span id="final-score"
+                                            class="font-bold text-2xl text-green-400"></span></p>
+                                    <div class="flex justify-around">
+                                        <div>
+                                            <p class="text-gray-400">Corretas (1ª tent.)</p>
+                                            <p id="correct-answers" class="text-2xl font-bold text-green-500"></p>
+                                        </div>
+                                        <div>
+                                            <p class="text-gray-400">Incorretas (1ª tent.)</p>
+                                            <p id="incorrect-answers" class="text-2xl font-bold text-red-500"></p>
+                                        </div>
+                                    </div>
+                                </div>
 
-        function updateQuantityInputs() {
-            const selectedThemes = [...themeCheckboxesDiv.querySelectorAll('input:checked')].map(cb => cb.value);
-            quantityInputsDiv.innerHTML = '';
+                                <div class="flex space-x-4">
+                                    <button id="reviewErrorsBtn"
+                                        class="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold py-3 px-4 rounded-lg hidden">
+                                        Revisar Erros
+                                    </button>
+                                    <button id="restartQuizBtn"
+                                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition-transform transform hover:scale-105">
+                                        Reiniciar Quiz
+                                    </button>
+                                </div>
 
-            if (selectedThemes.length > 0) {
-                quantityPerThemeDiv.classList.remove('hidden');
-                selectedThemes.forEach(theme => {
-                    const maxQuestions = quizData[theme].length;
-                    const inputContainer = document.createElement('div');
-                    inputContainer.className = 'p-2 rounded-md bg-gray-800 border border-gray-700';
-                    inputContainer.dataset.theme = theme;
+                                <!-- Container de Revisão -->
+                                <div id="review-container"
+                                    class="hidden text-left space-y-4 mt-6 max-h-96 overflow-y-auto pr-2">
+                                    <!-- Itens de revisão -->
+                                </div>
+                            </div>
+                        </div>
 
-                    inputContainer.innerHTML = `
+                        <!-- Modal de Report -->
+                        <div id="report-modal"
+                            class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                            <div class="bg-gray-800 rounded-lg p-6 max-w-sm w-full shadow-2xl border border-gray-700">
+                                <h3 class="text-xl font-bold text-white mb-4">Reportar Erro</h3>
+                                <p class="text-gray-300 mb-4">O ID da questão foi copiado para sua área de
+                                    transferência:</p>
+                                <code id="copied-id"
+                                    class="block bg-gray-900 p-2 rounded text-green-400 font-mono text-center mb-6"></code>
+                                <p class="text-gray-400 text-sm mb-6">Por favor, abra uma issue no GitHub colando este
+                                    ID e descrevendo o problema.</p>
+                                <div class="space-y-3">
+                                    <a href="https://github.com/andremillet/neuroquiz/issues/new" target="_blank"
+                                        class="block w-full bg-green-600 hover:bg-green-700 text-white text-center font-bold py-2 px-4 rounded-lg">
+                                        Abrir GitHub Issues
+                                    </a>
+                                    <button id="closeReportBtn"
+                                        class="block w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">
+                                        Fechar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Mapa de Questões -->
+                        <div id="map-modal"
+                            class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+                            <div
+                                class="bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-2xl border border-gray-700 max-h-[80vh] flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-xl font-bold text-white">Mapa de Questões</h3>
+                                    <button id="closeMapBtn" class="text-gray-400 hover:text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div id="map-grid" class="grid grid-cols-5 sm:grid-cols-8 gap-2 overflow-y-auto p-2">
+                                    <!-- Grid items -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <script type="module">
+                            // Estado da aplicação
+                            let quizData = {};
+                            let quizQuestions = [];
+                            let currentQuestionIndex = 0;
+                            let score = 0;
+                            let incorrectCount = 0;
+                            let isFirstAttempt = true;
+                            let incorrectQuestionsLog = []; // Armazena detalhes dos erros para revisão
+                            let questionStatus = []; // 'unseen', 'correct', 'incorrect'
+
+                            // Telas
+                            const screens = document.querySelectorAll('.screen');
+                            const setupScreen = document.getElementById('setup-screen');
+                            const quizScreen = document.getElementById('quiz-screen');
+                            const resultsScreen = document.getElementById('results-screen');
+
+                            // Elementos da UI
+                            const jsonFileInput = document.getElementById('jsonFile');
+                            const loadDefaultBtn = document.getElementById('loadDefaultBtn');
+                            const fileStatus = document.getElementById('file-status');
+                            const themeSelectionDiv = document.getElementById('theme-selection');
+                            const themeCheckboxesDiv = document.getElementById('theme-checkboxes');
+                            const quantityPerThemeDiv = document.getElementById('quantity-per-theme-selection');
+                            const quantityInputsDiv = document.getElementById('quantity-inputs');
+                            const startQuizBtn = document.getElementById('startQuizBtn');
+                            const sequentialModeCheckbox = document.getElementById('sequentialMode');
+
+                            const progressBar = document.getElementById('progress-bar');
+                            const progressText = document.getElementById('progress-text');
+                            const questionText = document.getElementById('question-text');
+                            const quizThemeText = document.getElementById('quiz-theme');
+                            const optionsContainer = document.getElementById('options-container');
+                            const feedbackContainer = document.getElementById('feedback-container');
+                            const explanationBox = document.getElementById('explanation-box');
+                            const explanationText = document.getElementById('explanation-text');
+                            const tryAgainBtn = document.getElementById('tryAgainBtn');
+                            const showExplanationBtn = document.getElementById('showExplanationBtn');
+                            const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+                            const prevQuestionBtn = document.getElementById('prevQuestionBtn');
+                            const reportBtn = document.getElementById('reportBtn');
+                            const openMapBtn = document.getElementById('openMapBtn');
+
+                            const finalScoreText = document.getElementById('final-score');
+                            const correctAnswersText = document.getElementById('correct-answers');
+                            const incorrectAnswersText = document.getElementById('incorrect-answers');
+                            const restartQuizBtn = document.getElementById('restartQuizBtn');
+                            const reviewErrorsBtn = document.getElementById('reviewErrorsBtn');
+                            const reviewContainer = document.getElementById('review-container');
+
+                            // Modais
+                            const reportModal = document.getElementById('report-modal');
+                            const closeReportBtn = document.getElementById('closeReportBtn');
+                            const copiedIdText = document.getElementById('copied-id');
+
+                            const mapModal = document.getElementById('map-modal');
+                            const closeMapBtn = document.getElementById('closeMapBtn');
+                            const mapGrid = document.getElementById('map-grid');
+
+                            // Funções
+                            function switchScreen(screenId) {
+                                screens.forEach(screen => screen.classList.remove('active'));
+                                document.getElementById(screenId).classList.add('active');
+                            }
+
+                            function processQuizData(rawData) {
+                                if (rawData.categorias && Array.isArray(rawData.categorias)) {
+                                    quizData = {};
+                                    rawData.categorias.forEach(cat => {
+                                        const mappedQuestions = cat.questoes.map(q => ({
+                                            pergunta: q.enunciado,
+                                            opcoes: q.alternativas,
+                                            resposta_correta: q.gabarito,
+                                            explicacao: q.comentario,
+                                            id: q.id,
+                                            tema: cat.nome
+                                        }));
+                                        quizData[cat.nome] = mappedQuestions;
+                                    });
+                                } else {
+                                    quizData = rawData;
+                                }
+                                populateThemes();
+                                themeSelectionDiv.classList.remove('hidden');
+                                startQuizBtn.disabled = false;
+                            }
+
+                            function handleJsonUpload(event) {
+                                const file = event.target.files[0];
+                                if (!file) return;
+
+                                fileStatus.textContent = `Arquivo carregado: ${file.name}`;
+
+                                const reader = new FileReader();
+                                reader.onload = (e) => {
+                                    try {
+                                        const rawData = JSON.parse(e.target.result);
+                                        processQuizData(rawData);
+                                    } catch (error) {
+                                        alert('Erro ao ler o arquivo JSON.');
+                                        console.error(error);
+                                    }
+                                };
+                                reader.readAsText(file);
+                            }
+
+                            async function loadDefaultBank() {
+                                try {
+                                    loadDefaultBtn.textContent = "Carregando...";
+                                    loadDefaultBtn.disabled = true;
+
+                                    const response = await fetch('banco_piloto_ten_abn.json');
+                                    if (!response.ok) throw new Error('Falha ao carregar arquivo padrão');
+
+                                    const rawData = await response.json();
+                                    processQuizData(rawData);
+
+                                    fileStatus.textContent = "Banco Padrão carregado com sucesso!";
+                                    fileStatus.classList.add('text-green-400');
+                                    loadDefaultBtn.textContent = "Banco Carregado";
+                                } catch (error) {
+                                    alert('Erro ao carregar o banco padrão. Certifique-se que o arquivo está na mesma pasta.');
+                                    console.error(error);
+                                    loadDefaultBtn.textContent = "Carregar Banco Padrão";
+                                    loadDefaultBtn.disabled = false;
+                                }
+                            }
+
+                            function populateThemes() {
+                                themeCheckboxesDiv.innerHTML = '';
+                                for (const theme in quizData) {
+                                    const div = document.createElement('div');
+                                    div.className = 'flex items-center';
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.id = `theme-${theme.replace(/\s/g, '-')}`;
+                                    checkbox.value = theme;
+                                    checkbox.className = 'w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-600 ring-offset-gray-800 focus:ring-2';
+                                    const label = document.createElement('label');
+                                    label.htmlFor = `theme-${theme.replace(/\s/g, '-')}`;
+                                    label.textContent = theme;
+                                    label.className = 'ml-2 text-sm font-medium text-gray-300';
+                                    div.appendChild(checkbox);
+                                    div.appendChild(label);
+                                    themeCheckboxesDiv.appendChild(div);
+                                }
+                            }
+
+                            function updateQuantityInputs() {
+                                const selectedThemes = [...themeCheckboxesDiv.querySelectorAll('input:checked')].map(cb => cb.value);
+                                quantityInputsDiv.innerHTML = '';
+
+                                if (selectedThemes.length > 0) {
+                                    quantityPerThemeDiv.classList.remove('hidden');
+                                    selectedThemes.forEach(theme => {
+                                        const maxQuestions = quizData[theme].length;
+                                        const inputContainer = document.createElement('div');
+                                        inputContainer.className = 'p-2 rounded-md bg-gray-800 border border-gray-700';
+                                        inputContainer.dataset.theme = theme;
+
+                                        inputContainer.innerHTML = `
                         <p class="font-semibold text-indigo-400 text-sm mb-2">${theme} (${maxQuestions} disponíveis)</p>
                         <div class="flex items-center space-x-3">
                             <input type="number" value="10" min="1" max="${maxQuestions}" class="num-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full p-2">
@@ -345,226 +556,252 @@
                             </div>
                         </div>
                     `;
-                    quantityInputsDiv.appendChild(inputContainer);
-                });
+                                        quantityInputsDiv.appendChild(inputContainer);
+                                    });
 
-                quantityInputsDiv.querySelectorAll('.all-checkbox').forEach(cb => {
-                    cb.addEventListener('change', (e) => {
-                        const numInput = e.target.closest('.flex').previousElementSibling;
-                        numInput.disabled = e.target.checked;
-                    });
-                });
+                                    quantityInputsDiv.querySelectorAll('.all-checkbox').forEach(cb => {
+                                        cb.addEventListener('change', (e) => {
+                                            const numInput = e.target.closest('.flex').previousElementSibling;
+                                            numInput.disabled = e.target.checked;
+                                        });
+                                    });
 
-            } else {
-                quantityPerThemeDiv.classList.add('hidden');
-            }
-        }
+                                } else {
+                                    quantityPerThemeDiv.classList.add('hidden');
+                                }
+                            }
 
 
-        function startQuiz() {
-            quizQuestions = [];
-            const quantityDivs = quantityInputsDiv.querySelectorAll('div[data-theme]');
+                            function startQuiz() {
+                                quizQuestions = [];
+                                const quantityDivs = quantityInputsDiv.querySelectorAll('div[data-theme]');
+                                const isSequential = sequentialModeCheckbox.checked;
 
-            quantityDivs.forEach(div => {
-                const theme = div.dataset.theme;
-                const numInput = div.querySelector('.num-input');
-                const allCheckbox = div.querySelector('.all-checkbox');
+                                quantityDivs.forEach(div => {
+                                    const theme = div.dataset.theme;
+                                    const numInput = div.querySelector('.num-input');
+                                    const allCheckbox = div.querySelector('.all-checkbox');
 
-                const availableQuestions = [...quizData[theme]];
-                const maxQuestions = availableQuestions.length;
+                                    let availableQuestions = [...quizData[theme]];
+                                    // Se não for sequencial, embaralha antes de cortar
+                                    if (!isSequential) {
+                                        availableQuestions.sort(() => 0.5 - Math.random());
+                                    }
 
-                let numToTake = 0;
-                if (allCheckbox.checked) {
-                    numToTake = maxQuestions;
-                } else {
-                    const requested = parseInt(numInput.value);
-                    numToTake = Math.min(requested, maxQuestions);
-                }
+                                    const maxQuestions = availableQuestions.length;
 
-                const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
-                quizQuestions.push(...shuffled.slice(0, numToTake).map(q => ({ ...q, theme })));
-            });
+                                    let numToTake = 0;
+                                    if (allCheckbox.checked) {
+                                        numToTake = maxQuestions;
+                                    } else {
+                                        const requested = parseInt(numInput.value);
+                                        numToTake = Math.min(requested, maxQuestions);
+                                    }
 
-            if (quizQuestions.length === 0) {
-                alert('Por favor, defina um número de questões para pelo menos um tema.');
-                return;
-            }
+                                    quizQuestions.push(...availableQuestions.slice(0, numToTake).map(q => ({ ...q, theme })));
+                                });
 
-            quizQuestions.sort(() => 0.5 - Math.random());
+                                if (quizQuestions.length === 0) {
+                                    alert('Por favor, defina um número de questões para pelo menos um tema.');
+                                    return;
+                                }
 
-            currentQuestionIndex = 0;
-            score = 0;
-            incorrectCount = 0;
-            incorrectQuestionsLog = [];
+                                // Se não for sequencial, embaralha o resultado final (misturando temas)
+                                if (!isSequential) {
+                                    quizQuestions.sort(() => 0.5 - Math.random());
+                                }
+                                // Se for sequencial, mantemos a ordem de inserção (por tema), ou poderíamos ordenar por ID se quiséssemos ser estritos.
+                                // Por enquanto, sequencial respeita a ordem do JSON dentro de cada tema.
 
-            displayQuestion();
-            switchScreen('quiz-screen');
-        }
+                                currentQuestionIndex = 0;
+                                score = 0;
+                                incorrectCount = 0;
+                                incorrectQuestionsLog = [];
+                                questionStatus = new Array(quizQuestions.length).fill('unseen');
 
-        function displayQuestion() {
-            isFirstAttempt = true;
-            feedbackContainer.classList.add('hidden');
-            explanationBox.classList.add('hidden');
-            nextQuestionBtn.classList.add('hidden');
-            tryAgainBtn.classList.add('hidden');
-            showExplanationBtn.classList.add('hidden');
+                                displayQuestion();
+                                switchScreen('quiz-screen');
+                            }
 
-            const question = quizQuestions[currentQuestionIndex];
+                            function displayQuestion() {
+                                isFirstAttempt = true;
+                                feedbackContainer.classList.add('hidden');
+                                explanationBox.classList.add('hidden');
+                                nextQuestionBtn.classList.add('hidden');
+                                tryAgainBtn.classList.add('hidden');
+                                showExplanationBtn.classList.add('hidden');
 
-            // Update Progress
-            progressText.textContent = `Questão ${currentQuestionIndex + 1} de ${quizQuestions.length}`;
-            const progressPercent = ((currentQuestionIndex) / quizQuestions.length) * 100;
-            progressBar.style.width = `${progressPercent}%`;
+                                const question = quizQuestions[currentQuestionIndex];
 
-            quizThemeText.textContent = question.theme;
-            questionText.textContent = question.pergunta;
+                                // Update Progress
+                                progressText.textContent = `Questão ${currentQuestionIndex + 1} de ${quizQuestions.length}`;
+                                const progressPercent = ((currentQuestionIndex) / quizQuestions.length) * 100;
+                                progressBar.style.width = `${progressPercent}%`;
 
-            optionsContainer.innerHTML = '';
+                                // Update Nav Buttons
+                                prevQuestionBtn.disabled = currentQuestionIndex === 0;
 
-            const options = Object.entries(question.opcoes);
-            for (let i = options.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [options[i], options[j]] = [options[j], options[i]];
-            }
+                                quizThemeText.textContent = question.theme;
+                                questionText.textContent = question.pergunta;
 
-            options.forEach(([key, value], index) => {
-                const button = document.createElement('button');
-                // Adicionar atalho de teclado visual (1, 2, 3...)
-                const shortcut = index + 1;
-                button.innerHTML = `<span class="font-mono text-indigo-400 mr-2">[${shortcut}]</span> ${key.toUpperCase()}. ${value}`;
-                button.dataset.option = key;
-                button.dataset.index = index; // Para navegação por teclado
-                button.className = 'option-btn block w-full text-left p-3 bg-gray-700 hover:bg-gray-600 border border-transparent rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none';
-                optionsContainer.appendChild(button);
-            });
-        }
+                                optionsContainer.innerHTML = '';
 
-        function handleAnswer(selectedOption, buttonElement) {
-            const question = quizQuestions[currentQuestionIndex];
-            const correctOption = question.resposta_correta;
+                                const options = Object.entries(question.opcoes);
+                                // Embaralhar opções apenas se NÃO for sequencial? 
+                                // Geralmente em quiz se embaralha opções sempre, mas para "estudo de livro" talvez não.
+                                // Vamos manter embaralhado por enquanto para evitar viés de posição.
+                                for (let i = options.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [options[i], options[j]] = [options[j], options[i]];
+                                }
 
-            const optionButtons = optionsContainer.querySelectorAll('.option-btn');
-            optionButtons.forEach(btn => btn.disabled = true);
+                                options.forEach(([key, value], index) => {
+                                    const button = document.createElement('button');
+                                    const shortcut = index + 1;
+                                    button.innerHTML = `<span class="font-mono text-indigo-400 mr-2">[${shortcut}]</span> ${key.toUpperCase()}. ${value}`;
+                                    button.dataset.option = key;
+                                    button.dataset.index = index;
+                                    button.className = 'option-btn block w-full text-left p-3 bg-gray-700 hover:bg-gray-600 border border-transparent rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none';
 
-            if (selectedOption === correctOption) {
-                buttonElement.classList.add('correct');
-                if (isFirstAttempt) {
-                    score++;
-                }
-                feedbackContainer.classList.remove('hidden');
-                nextQuestionBtn.classList.remove('hidden');
-                nextQuestionBtn.focus(); // Focar no botão de próximo
-            } else {
-                buttonElement.classList.add('incorrect');
-                const correctButton = optionsContainer.querySelector(`[data-option="${correctOption}"]`);
-                if (correctButton) correctButton.classList.add('correct');
+                                    // Se já respondeu essa questão antes (ao navegar voltar/avançar)
+                                    if (questionStatus[currentQuestionIndex] !== 'unseen') {
+                                        button.disabled = true;
+                                        if (key === question.resposta_correta) {
+                                            button.classList.add('correct');
+                                        } else if (questionStatus[currentQuestionIndex] === 'incorrect' && false) {
+                                            // Difícil saber qual incorreta foi marcada anteriormente sem salvar estado detalhado.
+                                            // Simplificação: mostra apenas a correta se já foi respondida.
+                                        }
+                                    }
 
-                if (isFirstAttempt) {
-                    incorrectCount++;
-                    // Logar erro para revisão
-                    incorrectQuestionsLog.push({
-                        question: question,
-                        selected: selectedOption,
-                        correct: correctOption
-                    });
-                }
-                isFirstAttempt = false;
-                feedbackContainer.classList.remove('hidden');
-                tryAgainBtn.classList.remove('hidden');
-                showExplanationBtn.classList.remove('hidden');
-                showExplanationBtn.focus();
-            }
+                                    optionsContainer.appendChild(button);
+                                });
 
-            // Update progress bar to show completion of this step
-            const progressPercent = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
-            progressBar.style.width = `${progressPercent}%`;
-        }
+                                // Se já respondeu, mostra feedback
+                                if (questionStatus[currentQuestionIndex] !== 'unseen') {
+                                    feedbackContainer.classList.remove('hidden');
+                                    explanationBox.classList.remove('hidden');
+                                    showExplanation(); // Mostra explicação direto
+                                    nextQuestionBtn.classList.remove('hidden');
+                                }
+                            }
 
-        function handleOptionClick(e) {
-            if (!e.target.closest('.option-btn')) return;
-            const btn = e.target.closest('.option-btn');
-            if (btn.disabled) return;
-            handleAnswer(btn.dataset.option, btn);
-        }
+                            function handleAnswer(selectedOption, buttonElement) {
+                                const question = quizQuestions[currentQuestionIndex];
+                                const correctOption = question.resposta_correta;
 
-        function tryAgain() {
-            const optionButtons = optionsContainer.querySelectorAll('.option-btn');
-            optionButtons.forEach(btn => {
-                btn.disabled = false;
-                btn.classList.remove('correct', 'incorrect');
-            });
-            feedbackContainer.classList.add('hidden');
+                                const optionButtons = optionsContainer.querySelectorAll('.option-btn');
+                                optionButtons.forEach(btn => btn.disabled = true);
 
-            // Re-embaralhar apenas as opções
-            const question = quizQuestions[currentQuestionIndex];
-            const options = Object.entries(question.opcoes);
-            for (let i = options.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [options[i], options[j]] = [options[j], options[i]];
-            }
-            optionsContainer.innerHTML = '';
-            options.forEach(([key, value], index) => {
-                const button = document.createElement('button');
-                const shortcut = index + 1;
-                button.innerHTML = `<span class="font-mono text-indigo-400 mr-2">[${shortcut}]</span> ${key.toUpperCase()}. ${value}`;
-                button.dataset.option = key;
-                button.dataset.index = index;
-                button.className = 'option-btn block w-full text-left p-3 bg-gray-700 hover:bg-gray-600 border border-transparent rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none';
-                optionsContainer.appendChild(button);
-            });
-        }
+                                if (selectedOption === correctOption) {
+                                    buttonElement.classList.add('correct');
+                                    if (isFirstAttempt && questionStatus[currentQuestionIndex] === 'unseen') {
+                                        score++;
+                                        questionStatus[currentQuestionIndex] = 'correct';
+                                    }
+                                    feedbackContainer.classList.remove('hidden');
+                                    nextQuestionBtn.classList.remove('hidden');
+                                    nextQuestionBtn.focus();
+                                } else {
+                                    buttonElement.classList.add('incorrect');
+                                    const correctButton = optionsContainer.querySelector(`[data-option="${correctOption}"]`);
+                                    if (correctButton) correctButton.classList.add('correct');
 
-        function showExplanation() {
-            const explanation = quizQuestions[currentQuestionIndex].explicacao;
-            if (explanation && explanation.trim() !== 'Explicação não encontrada.' && explanation.trim() !== '') {
-                explanationText.textContent = explanation;
-            } else {
-                explanationText.textContent = 'Desculpe, a explicação para esta questão não foi encontrada no arquivo JSON.';
-            }
+                                    if (isFirstAttempt && questionStatus[currentQuestionIndex] === 'unseen') {
+                                        incorrectCount++;
+                                        questionStatus[currentQuestionIndex] = 'incorrect';
+                                        incorrectQuestionsLog.push({
+                                            question: question,
+                                            selected: selectedOption,
+                                            correct: correctOption
+                                        });
+                                    }
+                                    isFirstAttempt = false;
+                                    feedbackContainer.classList.remove('hidden');
+                                    tryAgainBtn.classList.remove('hidden');
+                                    showExplanationBtn.classList.remove('hidden');
+                                    showExplanationBtn.focus();
+                                }
 
-            explanationBox.classList.remove('hidden');
-            tryAgainBtn.classList.add('hidden');
-            showExplanationBtn.classList.add('hidden');
-            nextQuestionBtn.classList.remove('hidden');
-            nextQuestionBtn.focus();
-        }
+                                const progressPercent = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
+                                progressBar.style.width = `${progressPercent}%`;
+                            }
 
-        function nextQuestion() {
-            currentQuestionIndex++;
-            if (currentQuestionIndex < quizQuestions.length) {
-                displayQuestion();
-            } else {
-                showResults();
-            }
-        }
+                            function handleOptionClick(e) {
+                                if (!e.target.closest('.option-btn')) return;
+                                const btn = e.target.closest('.option-btn');
+                                if (btn.disabled) return;
+                                handleAnswer(btn.dataset.option, btn);
+                            }
 
-        function showResults() {
-            const totalQuestions = quizQuestions.length;
-            finalScoreText.textContent = `${Math.round((score / totalQuestions) * 100)}%`;
-            correctAnswersText.textContent = score;
-            incorrectAnswersText.textContent = incorrectCount;
+                            function tryAgain() {
+                                const optionButtons = optionsContainer.querySelectorAll('.option-btn');
+                                optionButtons.forEach(btn => {
+                                    btn.disabled = false;
+                                    btn.classList.remove('correct', 'incorrect');
+                                });
+                                feedbackContainer.classList.add('hidden');
+                                // Não re-embaralhar no tryAgain para não confundir visualmente
+                            }
 
-            if (incorrectQuestionsLog.length > 0) {
-                reviewErrorsBtn.classList.remove('hidden');
-            } else {
-                reviewErrorsBtn.classList.add('hidden');
-            }
+                            function showExplanation() {
+                                const explanation = quizQuestions[currentQuestionIndex].explicacao;
+                                if (explanation && explanation.trim() !== 'Explicação não encontrada.' && explanation.trim() !== '') {
+                                    explanationText.textContent = explanation;
+                                } else {
+                                    explanationText.textContent = 'Desculpe, a explicação para esta questão não foi encontrada no arquivo JSON.';
+                                }
 
-            reviewContainer.classList.add('hidden');
-            reviewContainer.innerHTML = '';
+                                explanationBox.classList.remove('hidden');
+                                tryAgainBtn.classList.add('hidden');
+                                showExplanationBtn.classList.add('hidden');
+                                nextQuestionBtn.classList.remove('hidden');
+                                nextQuestionBtn.focus();
+                            }
 
-            switchScreen('results-screen');
-        }
+                            function nextQuestion() {
+                                currentQuestionIndex++;
+                                if (currentQuestionIndex < quizQuestions.length) {
+                                    displayQuestion();
+                                } else {
+                                    showResults();
+                                }
+                            }
 
-        function toggleReview() {
-            if (reviewContainer.classList.contains('hidden')) {
-                reviewContainer.classList.remove('hidden');
-                reviewContainer.innerHTML = ''; // Limpar anterior
+                            function prevQuestion() {
+                                if (currentQuestionIndex > 0) {
+                                    currentQuestionIndex--;
+                                    displayQuestion();
+                                }
+                            }
 
-                incorrectQuestionsLog.forEach((item, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-gray-800 p-4 rounded-lg border border-red-900';
-                    div.innerHTML = `
+                            function showResults() {
+                                const totalQuestions = quizQuestions.length;
+                                finalScoreText.textContent = `${Math.round((score / totalQuestions) * 100)}%`;
+                                correctAnswersText.textContent = score;
+                                incorrectAnswersText.textContent = incorrectCount;
+
+                                if (incorrectQuestionsLog.length > 0) {
+                                    reviewErrorsBtn.classList.remove('hidden');
+                                } else {
+                                    reviewErrorsBtn.classList.add('hidden');
+                                }
+
+                                reviewContainer.classList.add('hidden');
+                                reviewContainer.innerHTML = '';
+
+                                switchScreen('results-screen');
+                            }
+
+                            function toggleReview() {
+                                if (reviewContainer.classList.contains('hidden')) {
+                                    reviewContainer.classList.remove('hidden');
+                                    reviewContainer.innerHTML = '';
+
+                                    incorrectQuestionsLog.forEach((item, index) => {
+                                        const div = document.createElement('div');
+                                        div.className = 'bg-gray-800 p-4 rounded-lg border border-red-900';
+                                        div.innerHTML = `
                         <p class="font-bold text-gray-300 mb-2">${index + 1}. ${item.question.pergunta}</p>
                         <p class="text-red-400 text-sm">Sua resposta: ${item.selected} - ${item.question.opcoes[item.selected]}</p>
                         <p class="text-green-400 text-sm">Correta: ${item.correct} - ${item.question.opcoes[item.correct]}</p>
@@ -572,61 +809,116 @@
                             <span class="font-semibold">Explicação:</span> ${item.question.explicacao || 'Sem explicação disponível.'}
                         </div>
                     `;
-                    reviewContainer.appendChild(div);
-                });
-                reviewErrorsBtn.textContent = "Ocultar Revisão";
-            } else {
-                reviewContainer.classList.add('hidden');
-                reviewErrorsBtn.textContent = "Revisar Erros";
-            }
-        }
+                                        reviewContainer.appendChild(div);
+                                    });
+                                    reviewErrorsBtn.textContent = "Ocultar Revisão";
+                                } else {
+                                    reviewContainer.classList.add('hidden');
+                                    reviewErrorsBtn.textContent = "Revisar Erros";
+                                }
+                            }
 
-        function restartQuiz() {
-            jsonFileInput.value = '';
-            themeSelectionDiv.classList.add('hidden');
-            quantityPerThemeDiv.classList.add('hidden');
-            startQuizBtn.disabled = true;
-            fileStatus.textContent = '';
-            loadDefaultBtn.disabled = false;
-            loadDefaultBtn.textContent = "Carregar Banco Padrão";
-            quizData = {};
-            switchScreen('setup-screen');
-        }
+                            function restartQuiz() {
+                                jsonFileInput.value = '';
+                                themeSelectionDiv.classList.add('hidden');
+                                quantityPerThemeDiv.classList.add('hidden');
+                                startQuizBtn.disabled = true;
+                                fileStatus.textContent = '';
+                                loadDefaultBtn.disabled = false;
+                                loadDefaultBtn.textContent = "Carregar Banco Padrão";
+                                quizData = {};
+                                switchScreen('setup-screen');
+                            }
 
-        // Keyboard Navigation
-        document.addEventListener('keydown', (e) => {
-            if (!quizScreen.classList.contains('active')) return;
+                            // Report Logic
+                            function openReportModal() {
+                                const question = quizQuestions[currentQuestionIndex];
+                                const id = question.id || "ID Desconhecido";
 
-            // Opções 1-5
-            if (['1', '2', '3', '4', '5'].includes(e.key)) {
-                const index = parseInt(e.key) - 1;
-                const buttons = optionsContainer.querySelectorAll('.option-btn');
-                if (buttons[index] && !buttons[index].disabled) {
-                    handleAnswer(buttons[index].dataset.option, buttons[index]);
-                }
-            }
+                                navigator.clipboard.writeText(id).then(() => {
+                                    copiedIdText.textContent = id;
+                                    reportModal.classList.remove('hidden');
+                                    reportModal.classList.add('flex');
+                                }).catch(err => {
+                                    console.error('Erro ao copiar ID: ', err);
+                                    copiedIdText.textContent = id;
+                                    reportModal.classList.remove('hidden');
+                                    reportModal.classList.add('flex');
+                                });
+                            }
 
-            // Enter para avançar
-            if (e.key === 'Enter') {
-                if (!nextQuestionBtn.classList.contains('hidden')) {
-                    nextQuestion();
-                }
-            }
-        });
+                            function closeReportModal() {
+                                reportModal.classList.add('hidden');
+                                reportModal.classList.remove('flex');
+                            }
 
-        // Adicionar Event Listeners
-        jsonFileInput.addEventListener('change', handleJsonUpload);
-        loadDefaultBtn.addEventListener('click', loadDefaultBank);
-        themeCheckboxesDiv.addEventListener('change', updateQuantityInputs);
-        startQuizBtn.addEventListener('click', startQuiz);
-        optionsContainer.addEventListener('click', handleOptionClick);
-        tryAgainBtn.addEventListener('click', tryAgain);
-        showExplanationBtn.addEventListener('click', showExplanation);
-        nextQuestionBtn.addEventListener('click', nextQuestion);
-        restartQuizBtn.addEventListener('click', restartQuiz);
-        reviewErrorsBtn.addEventListener('click', toggleReview);
+                            // Map Logic
+                            function openMap() {
+                                mapGrid.innerHTML = '';
+                                quizQuestions.forEach((q, index) => {
+                                    const btn = document.createElement('button');
+                                    btn.textContent = index + 1;
+                                    let statusClass = 'bg-gray-700 text-gray-300';
+                                    if (index === currentQuestionIndex) statusClass = 'bg-indigo-600 text-white ring-2 ring-white';
+                                    else if (questionStatus[index] === 'correct') statusClass = 'bg-green-600 text-white';
+                                    else if (questionStatus[index] === 'incorrect') statusClass = 'bg-red-600 text-white';
 
-    </script>
-</body>
+                                    btn.className = `p-2 rounded font-bold text-sm ${statusClass} hover:opacity-80`;
+                                    btn.onclick = () => {
+                                        currentQuestionIndex = index;
+                                        displayQuestion();
+                                        closeMap();
+                                    };
+                                    mapGrid.appendChild(btn);
+                                });
 
-</html>
+                                mapModal.classList.remove('hidden');
+                                mapModal.classList.add('flex');
+                            }
+
+                            function closeMap() {
+                                mapModal.classList.add('hidden');
+                                mapModal.classList.remove('flex');
+                            }
+
+                            // Keyboard Navigation
+                            document.addEventListener('keydown', (e) => {
+                                if (!quizScreen.classList.contains('active')) return;
+
+                                if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                                    const index = parseInt(e.key) - 1;
+                                    const buttons = optionsContainer.querySelectorAll('.option-btn');
+                                    if (buttons[index] && !buttons[index].disabled) {
+                                        handleAnswer(buttons[index].dataset.option, buttons[index]);
+                                    }
+                                }
+
+                                if (e.key === 'Enter') {
+                                    if (!nextQuestionBtn.classList.contains('hidden')) {
+                                        nextQuestion();
+                                    }
+                                }
+                            });
+
+                            // Adicionar Event Listeners
+                            jsonFileInput.addEventListener('change', handleJsonUpload);
+                            loadDefaultBtn.addEventListener('click', loadDefaultBank);
+                            themeCheckboxesDiv.addEventListener('change', updateQuantityInputs);
+                            startQuizBtn.addEventListener('click', startQuiz);
+                            optionsContainer.addEventListener('click', handleOptionClick);
+                            tryAgainBtn.addEventListener('click', tryAgain);
+                            showExplanationBtn.addEventListener('click', showExplanation);
+                            nextQuestionBtn.addEventListener('click', nextQuestion);
+                            prevQuestionBtn.addEventListener('click', prevQuestion);
+                            restartQuizBtn.addEventListener('click', restartQuiz);
+                            reviewErrorsBtn.addEventListener('click', toggleReview);
+
+                            reportBtn.addEventListener('click', openReportModal);
+                            closeReportBtn.addEventListener('click', closeReportModal);
+                            openMapBtn.addEventListener('click', openMap);
+                            closeMapBtn.addEventListener('click', closeMap);
+
+                        </script>
+                    </body>
+
+                    </html>
