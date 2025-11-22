@@ -1,0 +1,4 @@
+*.pdf
+extracted_questions.json
+*_full.txt
+concurso_linearized.txt
